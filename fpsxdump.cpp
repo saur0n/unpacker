@@ -49,6 +49,10 @@ int main(int argc, char** argv) {
         
         return 0;
     }
+    catch (const EOFException &ee) {
+        cerr << argv[0] << ": error: premature and of file or block" << endl;
+        return 1;
+    }
     catch (const char * error) {
         cerr << argv[0] << ": error: " << error << endl;
         return 1;

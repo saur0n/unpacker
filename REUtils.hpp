@@ -9,6 +9,9 @@
 #include <ostream>
 #include <unix++/File.hpp>
 
+/** Indicates that an attempt to read beyound of file or a block occurred **/
+class EOFException {};
+
 class BinaryReader {
 public:
     class ToEnd {};
@@ -109,7 +112,7 @@ protected:
         size_t retval=file.read(buffer, length, offset+start);
         offset+=length;
         if (retval<length)
-            throw "EOF";
+            throw EOFException();
     }
     template <class T>
     T read() {
