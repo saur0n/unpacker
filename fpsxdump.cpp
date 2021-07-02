@@ -1,12 +1,13 @@
 /*******************************************************************************
  *  FPSX/ROFS unpacking program
+ *  © 2020—2021, Sauron
  ******************************************************************************/
 
 #include <cstring>
 #include <iostream>
 #include "REUtils.hpp"
 
-using namespace nx;
+using namespace upp;
 using std::cerr;
 using std::cout;
 using std::endl;

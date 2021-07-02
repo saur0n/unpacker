@@ -15,7 +15,7 @@ class EOFException {};
 class BinaryReader {
 public:
     class ToEnd {};
-    BinaryReader(nx::File &file) :
+    BinaryReader(upp::File &file) :
         file(file), start(0), offset(0), size(file.seek(0, SEEK_END)) {}
     BinaryReader(const BinaryReader &other) :
         file(other.file), start(other.start+other.offset), offset(0), size(other.size) {}
@@ -96,7 +96,7 @@ public:
         int flags=O_WRONLY|O_CREAT;
         if (truncate)
             flags|=O_TRUNC;
-        nx::File out(destination.c_str(), flags);
+        upp::File out(destination.c_str(), flags);
         out.seek(offset);
         std::string data(length, '\0');
         read(&data[0], length);
@@ -122,7 +122,7 @@ protected:
     }
     
 private:
-    nx::File &file;
+    upp::File &file;
     const off_t start;
     off_t offset;
     size_t size;
