@@ -104,7 +104,7 @@ public:
     }
     void extract(const std::string &destination, bool truncate=false) {
         off_t pos=tell();
-        extract(destination, 0, size-tell(), truncate);
+        extract(destination, pos, size-pos, truncate);
     }
     
 protected:
