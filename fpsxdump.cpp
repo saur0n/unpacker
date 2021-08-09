@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  FPSX/ROFS/RROM unpacking program
+ *  FPSX/ROFS/Akuvox unpacking program
  *  
  *  © 2020—2021, Sauron
  ******************************************************************************/
@@ -7,6 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include "REUtils.hpp"
+#include "StringUtils.hpp"
 
 using namespace upp;
 using std::cerr;
@@ -18,13 +19,6 @@ extern void extractROM(BinaryReader &is);
 extern void extractFirmware(BinaryReader &is, const std::string &outDir, Indent indent=Indent());
 extern void extractROFS(BinaryReader &is, const std::string &outDir, Indent indent=Indent());
 extern void extractSPI(BinaryReader &is);
-
-bool endsWith(std::string const &fullString, std::string const &ending) {
-    if (fullString.length()>=ending.length())
-        return (0==fullString.compare(fullString.length()-ending.length(), ending.length(), ending));
-    else
-        return false;
-}
 
 int main(int argc, char** argv) {
     try {
@@ -49,7 +43,7 @@ int main(int argc, char** argv) {
             // Akuvox firmware file
             extractROM(is);
         }
-        else if (endsWith(filename, ".img")) { //HACK
+        else if (endsWith(filename, ".img")) {
             BinaryReader volume1(is, 0x12a0400, BinaryReader::ToEnd());
             extractROFS(volume1, "rofs");
             BinaryReader volume2(is, 0x3920400, BinaryReader::ToEnd());

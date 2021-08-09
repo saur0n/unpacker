@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <ostream>
 #include <unix++/File.hpp>
+#include <vector>
 
 /** Indicates that an attempt to read beyound of file or a block occurred **/
 class EOFException {};
@@ -106,11 +107,21 @@ public:
         off_t pos=tell();
         extract(destination, pos, size-pos, truncate);
     }
+    std::vector<uint8_t> read(size_t maxLength) {
+        std::vector<uint8_t> result(maxLength);
+        size_t nRead=file.read(&result[0], maxLength, offset+start);
+        offset+=nRead;
+        result.resize(nRead);
+        return result;
+    }
+    std::vector<uint8_t> readAll() {
+        return read(available());
+    }
     
 protected:
     void read(void * buffer, size_t length) {
         size_t retval=file.read(buffer, length, offset+start);
-        offset+=length;
+        offset+=retval;
         if (retval<length)
             throw EOFException();
     }
