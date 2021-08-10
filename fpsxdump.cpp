@@ -15,9 +15,10 @@ using std::cout;
 using std::endl;
 using std::string;
 
+extern void extractAndroidImage(BinaryReader &is, const string &filename);
 extern void extractROM(BinaryReader &is);
-extern void extractFirmware(BinaryReader &is, const std::string &outDir, Indent indent=Indent());
-extern void extractROFS(BinaryReader &is, const std::string &outDir, Indent indent=Indent());
+extern void extractFirmware(BinaryReader &is, const string &outDir, Indent indent=Indent());
+extern void extractROFS(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractSPI(BinaryReader &is);
 
 int main(int argc, char** argv) {
@@ -25,7 +26,7 @@ int main(int argc, char** argv) {
         if (argc == 1)
             throw "no path specified";
 
-        std::string output;
+        string output;
 
         for (uint32_t i = 1; i < argc - 1; i++) {
             if (strncmp(argv[i], "-o", 2) == 0) {
@@ -39,7 +40,11 @@ int main(int argc, char** argv) {
         BinaryReader is(file);
         uint32_t magic=BinaryReader(is).readInt();
         
-        if (endsWith(filename, ".rom")) {
+        if (endsWith(filename, ".android")) {
+            // Android sparse image
+            extractAndroidImage(is, filename);
+        }
+        else if (endsWith(filename, ".rom")) {
             // Akuvox firmware file
             extractROM(is);
         }
@@ -49,7 +54,7 @@ int main(int argc, char** argv) {
             BinaryReader volume2(is, 0x3920400, BinaryReader::ToEnd());
             extractROFS(volume2, "rofs");
         }
-        else if (string(filename).find(".spi")!=string::npos) { //HACK
+        else if (endsWith(filename, ".spi")) { //HACK
             extractSPI(is);
         }
         else

@@ -132,8 +132,10 @@ vector<uint8_t> BinaryReader::readAll() {
 }
 
 void BinaryReader::read(void * buffer, size_t length) {
-    size_t retval=file.read(buffer, length, offset+start);
-    offset+=retval;
-    if (retval<length)
-        throw EOFException();
+    if (length) {
+        size_t retval=file.read(buffer, length, offset+start);
+        offset+=retval;
+        if (retval<length)
+            throw EOFException();
+    }
 }
