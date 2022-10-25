@@ -7,7 +7,9 @@
 #include <cstring>
 #include <iostream>
 #include <openssl/evp.h>
+#include <optional>
 #include <unix++/FileSystem.hpp>
+#include <zlib.h>
 #include "REUtils.hpp"
 #include "StringUtils.hpp"
 
@@ -48,33 +50,34 @@ struct SectionType {
     unsigned type;
     const char * description;
     bool encrypted;
+    bool compressed;
 };
 
 static const SectionType SECTION_TYPES[]={
-    {0,     "flash partition",                  true},
-    {1,     "upgrader tool",                    false},
-    {3,     "config modify",                    true},
-    {4,     "system.img",                       true},
-    {6,     "system.img (md5)",                 false},
-    {7,     "bootlogo.fex",                     true},
-    {8,     "peripheral controller",            true},
-    {9,     "bootloader.fex",                   true},
-    {10,    "resource configuration.md5",       false},
-    {11,    "resource configuration.tar.bz2",   true},
-    {200,   "200",                              true},
-    {201,   "201",                              true},
-    {202,   "202",                              true},
-    {203,   "203",                              true},
-    {204,   "204",                              true},
-    {205,   "205",                              true},
-    {206,   "206",                              true},
-    {220,   "220",                              false},
-    {221,   "221",                              false},
-    {222,   "222",                              false},
-    {223,   "223",                              false},
-    {224,   "224",                              false},
-    {225,   "225",                              false},
-    {226,   "226",                              false},
+    {0,     "flash partition",                  true,   false},
+    {1,     "upgrader tool",                    false,  false},
+    {3,     "config modify",                    true,   false},
+    {4,     "system.img",                       true,   false},
+    {6,     "system.img (md5)",                 false,  false},
+    {7,     "bootlogo.fex",                     true,   false},
+    {8,     "peripheral controller",            true,   false},
+    {9,     "bootloader.fex",                   true,   false},
+    {10,    "resource configuration.md5",       false,  false},
+    {11,    "resource configuration.tar.bz2",   true,   false},
+    {200,   "mtd0",                             true,   true},
+    {201,   "mtd1",                             true,   true},
+    {202,   "mtd2",                             true,   true},
+    {203,   "mtd3",                             true,   true},
+    {204,   "mtd4",                             true,   true},
+    {205,   "mtd5",                             true,   true},
+    {206,   "mtd6",                             true,   true},
+    {220,   "mtd0.md5",                         false,  false},
+    {221,   "mtd1.md5",                         false,  false},
+    {222,   "mtd2.md5",                         false,  false},
+    {223,   "mtd3.md5",                         false,  false},
+    {224,   "mtd4.md5",                         false,  false},
+    {225,   "mtd5.md5",                         false,  false},
+    {226,   "mtd6.md5",                         false,  false},
 };
 
 static const unsigned char ENCRYPTION_KEY[]="d3JpdGVfdXBncmFkZXJfYmluX3RvX2Zq";
@@ -89,11 +92,44 @@ static string formatVersion(uint32_t version) {
     return result;
 }
 
-static const SectionType * getSectionType(unsigned type) {
+static const SectionType &getSectionType(unsigned type) {
+    static const SectionType DEFAULT {0, nullptr, false, false};
     for (auto i=std::begin(SECTION_TYPES); i!=std::end(SECTION_TYPES); ++i)
         if (i->type==type)
-            return i;
-    return nullptr;
+            return *i;
+    return DEFAULT;
+}
+
+static void uncompressTo(const string &in, upp::File &output) {
+    // Read the input file
+    upp::File input(in.c_str(), O_RDONLY);
+    size_t inLength=input.seek(0, SEEK_END);
+    input.seek(0);
+    vector<uint8_t> inData(inLength);
+    input.read(&inData[0], inData.size());
+    
+    // Decompress the data
+    uLongf outLength=inLength*2;
+    vector<uint8_t> outData;
+    for (bool unpacked=false; !unpacked;) {
+        outData.resize(outLength);
+        int retval=uncompress(&outData[0], &outLength, &inData[0], inData.size());
+        if (retval==Z_OK) {
+            outData.resize(outLength);
+            unpacked=true;
+        }
+        else if (retval==Z_DATA_ERROR)
+            throw "Z_DATA_ERROR";
+        else if (retval==Z_MEM_ERROR)
+            throw "Z_MEM_ERROR";
+        else if (retval==Z_BUF_ERROR)
+            outLength+=outLength;
+        else
+            throw "Z_UNKNOWN_ERROR";
+    }
+    
+    // Write the decompressed file
+    output.write(outData.data(), outData.size());
 }
 
 void extractROM(BinaryReader &is) {
@@ -132,6 +168,9 @@ void extractROM(BinaryReader &is) {
     cout << "SW protect: " << swProtect << endl;
     cout << "Encryption type: " << encryptionType << endl;
     
+    // Uncompressed image
+    std::optional<upp::File> image;
+    
     for (unsigned i=0; i<sections; i++) {
         string sectionMagic=is.readString(4);
         if (sectionMagic!="TAPR")
@@ -148,8 +187,8 @@ void extractROM(BinaryReader &is) {
         uint32_t dataCRC=window.readIntLE();
         uint32_t dataOffset=window.readIntLE();
         
-        const SectionType * st=getSectionType(sectionType);
-        string sectionTypeStr=st?st->description:std::to_string(sectionType);
+        const SectionType &st=getSectionType(sectionType);
+        string sectionTypeStr=st.description?st.description:std::to_string(sectionType);
         
         cout << "Section" << endl;
         cout << "    Section type: " << sectionTypeStr << endl;
@@ -164,7 +203,7 @@ void extractROM(BinaryReader &is) {
         BinaryReader data(is, dataOffset, dataLength);
         mkdir(dir.c_str(), 0700);
         string filename=dir+'/'+std::to_string(i)+"_"+sectionTypeStr;
-        if (st&&st->encrypted&&(encryptionType==1)) {
+        if (st.encrypted&&(encryptionType==1)) {
             // First 1KB of a section is encrypted
             upp::File out(filename.c_str(), O_WRONLY|O_CREAT|O_TRUNC);
             vector<uint8_t> ciphertext;
@@ -195,6 +234,18 @@ void extractROM(BinaryReader &is) {
         else {
             data.extract(filename);
             cout << "    Exported to " << filename << endl;
+        }
+        
+        /*if (st.compressed) {
+            string unFilename=filename+".uncompressed";
+            uncompressFile(filename, unFilename);
+            cout << "    Uncompressed to " << unFilename << endl;
+        }*/
+        
+        if (st.compressed) {
+            if (!image)
+                image.emplace("akuvox/mtd", O_CREAT|O_WRONLY|O_TRUNC);
+            uncompressTo(filename, *image);
         }
     }
 }

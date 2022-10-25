@@ -2,7 +2,7 @@
 #   FPSX/ROFS unpacking program
 ################################################################################
 
-LIBRARIES=-lstdc++ -lunix++ -lcrypto
+LIBRARIES=-lstdc++ -lunix++ -lcrypto -lz
 
 all: fpsxdump
 
