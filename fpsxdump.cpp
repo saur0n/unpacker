@@ -20,6 +20,7 @@ extern void extractROM(BinaryReader &is);
 extern void extractFirmware(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractROFS(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractSPI(BinaryReader &is);
+extern void extractHaierFirmware(BinaryReader &is);
 
 int main(int argc, char** argv) {
     try {
@@ -43,6 +44,10 @@ int main(int argc, char** argv) {
         if (endsWith(filename, ".android")) {
             // Android sparse image
             extractAndroidImage(is, filename);
+        }
+        else if (endsWith(filename, ".bin")) {
+            // Haier SPI Flash dump
+            extractHaierFirmware(is);
         }
         else if (endsWith(filename, ".rom")) {
             // Akuvox firmware file

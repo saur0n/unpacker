@@ -10,12 +10,18 @@
 #include <unix++/File.hpp>
 #include <vector>
 
+/** Vector of bytes **/
+using ByteArray=std::vector<uint8_t>;
+
+/** Uncompress zlib-compressed data blob **/
+ByteArray uncompress(const ByteArray &in);
+
 /** Indicates that an attempt to read beyound of file or a block occurred **/
 class EOFException {};
 
 class BinaryReader {
 public:
-    class ToEnd {};
+    enum ToEnd { END };
     BinaryReader(upp::File &file);
     BinaryReader(const BinaryReader &other);
     BinaryReader(const BinaryReader &other, size_t length);
@@ -41,8 +47,8 @@ public:
     std::string readUnicodeString(size_t length);
     void extract(const std::string &destination, off_t offset, size_t length, bool truncate=false);
     void extract(const std::string &destination, bool truncate=false);
-    std::vector<uint8_t> read(size_t maxLength);
-    std::vector<uint8_t> readAll();
+    ByteArray read(size_t maxLength);
+    ByteArray readAll();
     
 protected:
     void read(void * buffer, size_t length);

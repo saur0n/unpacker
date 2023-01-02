@@ -9,7 +9,6 @@
 #include <openssl/evp.h>
 #include <optional>
 #include <unix++/FileSystem.hpp>
-#include <zlib.h>
 #include "REUtils.hpp"
 #include "StringUtils.hpp"
 
@@ -105,28 +104,11 @@ static void uncompressTo(const string &in, upp::File &output) {
     upp::File input(in.c_str(), O_RDONLY);
     size_t inLength=input.seek(0, SEEK_END);
     input.seek(0);
-    vector<uint8_t> inData(inLength);
+    ByteArray inData(inLength);
     input.read(&inData[0], inData.size());
     
     // Decompress the data
-    uLongf outLength=inLength*2;
-    vector<uint8_t> outData;
-    for (bool unpacked=false; !unpacked;) {
-        outData.resize(outLength);
-        int retval=uncompress(&outData[0], &outLength, &inData[0], inData.size());
-        if (retval==Z_OK) {
-            outData.resize(outLength);
-            unpacked=true;
-        }
-        else if (retval==Z_DATA_ERROR)
-            throw "Z_DATA_ERROR";
-        else if (retval==Z_MEM_ERROR)
-            throw "Z_MEM_ERROR";
-        else if (retval==Z_BUF_ERROR)
-            outLength+=outLength;
-        else
-            throw "Z_UNKNOWN_ERROR";
-    }
+    ByteArray outData=uncompress(inData);
     
     // Write the decompressed file
     output.write(outData.data(), outData.size());

@@ -1,7 +1,95 @@
+/*******************************************************************************
+ *  FPSX/ROFS unpacking program
+ ******************************************************************************/
+
+#include <cstdio>
+#include <zlib.h>
 #include "REUtils.hpp"
 
 using std::string;
 using std::vector;
+
+int ZEXPORT uncompress_(Bytef *dest, uLongf *destLen, const Bytef *source, uLong *sourceLen)
+{
+    z_stream stream;
+    int err;
+    const uInt max = (uInt)-1;
+    uLong len, left;
+    Byte buf[1];    /* for detection of incomplete stream when *destLen == 0 */
+
+    len = *sourceLen;
+    if (*destLen) {
+        left = *destLen;
+        *destLen = 0;
+    }
+    else {
+        left = 1;
+        dest = buf;
+    }
+
+    stream.next_in = (z_const Bytef *)source;
+    stream.avail_in = 0;
+    stream.zalloc = (alloc_func)0;
+    stream.zfree = (free_func)0;
+    stream.opaque = (voidpf)0;
+
+    err = inflateInit(&stream);
+    printf("err1=%d\n", err);
+    if (err != Z_OK) return err;
+
+    stream.next_out = dest;
+    stream.avail_out = 0;
+
+    do {
+        if (stream.avail_out == 0) {
+            stream.avail_out = left > (uLong)max ? max : (uInt)left;
+            left -= stream.avail_out;
+        }
+        if (stream.avail_in == 0) {
+            stream.avail_in = len > (uLong)max ? max : (uInt)len;
+            len -= stream.avail_in;
+        }
+        err = inflate(&stream, Z_NO_FLUSH);
+    } while (err == Z_OK);
+
+    *sourceLen -= len + stream.avail_in;
+    if (dest != buf)
+        *destLen = stream.total_out;
+    else if (stream.total_out && err == Z_BUF_ERROR)
+        left = 1;
+
+    inflateEnd(&stream);
+    printf("err2=%d\n", err);
+    return err == Z_STREAM_END ? Z_OK :
+           err == Z_NEED_DICT ? Z_DATA_ERROR  :
+           err == Z_BUF_ERROR && left + stream.avail_out ? Z_DATA_ERROR :
+           err;
+}
+
+ByteArray uncompress(const ByteArray &inData) {
+    uLongf outLength=inData.size()*2;
+    ByteArray outData;
+    for (bool unpacked=false; !unpacked;) {
+        outData.resize(outLength);
+        size_t inLength=inData.size();
+        int retval=uncompress_(&outData[0], &outLength, &inData[0], &inLength);
+        if (retval==Z_OK) {
+            outData.resize(outLength);
+            unpacked=true;
+        }
+        else if (retval==Z_DATA_ERROR)
+            throw "Z_DATA_ERROR";
+        else if (retval==Z_MEM_ERROR)
+            throw "Z_MEM_ERROR";
+        else if (retval==Z_BUF_ERROR)
+            outLength+=outLength;
+        else
+            throw "Z_UNKNOWN_ERROR";
+    }
+    return outData;
+}
+
+/******************************************************************************/
 
 BinaryReader::BinaryReader(upp::File &file) :
     file(file), start(0), offset(0), size(file.seek(0, SEEK_END)) {}
@@ -119,15 +207,15 @@ void BinaryReader::extract(const string &destination, bool truncate) {
     extract(destination, pos, size-pos, truncate);
 }
 
-vector<uint8_t> BinaryReader::read(size_t maxLength) {
-    vector<uint8_t> result(maxLength);
+ByteArray BinaryReader::read(size_t maxLength) {
+    ByteArray result(maxLength);
     size_t nRead=file.read(&result[0], maxLength, offset+start);
     offset+=nRead;
     result.resize(nRead);
     return result;
 }
 
-vector<uint8_t> BinaryReader::readAll() {
+ByteArray BinaryReader::readAll() {
     return read(available());
 }
 
