@@ -28,6 +28,7 @@ public:
     BinaryReader(const BinaryReader &other, off_t start, size_t length);
     BinaryReader(const BinaryReader &other, off_t start, ToEnd marker);
     virtual ~BinaryReader();
+    size_t getSize() const { return size; }
     off_t debug() const;
     off_t tell() const;
     size_t available() const;
@@ -94,5 +95,10 @@ template <class T>
 std::ostream &operator <<(std::ostream &stream, Hex<T> value) {
     return stream << std::hex << '0' << 'x' << value.value << std::dec;
 }
+
+/** Convert binary string to a hexadecimal string **/
+std::string toHexString(const std::string &in);
+/** Remove whitespace characters from the end of the string **/
+std::string trim(const std::string &in);
 
 #endif

@@ -7,6 +7,9 @@ using std::cout;
 using std::endl;
 using std::string;
 
+static const uint32_t BB5_COMMON_HEADER_MAGIC=0x809795A3U;
+static const uint32_t ROFS_MAGIC=0x53464F52U;
+
 class FSDumpContext {
 public:
     FSDumpContext(const std::string &path, uint32_t base) : path(path), base(base) {}
@@ -102,7 +105,16 @@ static void extractDir(BinaryReader &is, const FSDumpContext &dc, uint32_t offse
 }
 
 void extractROFS(BinaryReader &is, const string &outDir, Indent indent) {
-    uint32_t magic=is.readInt();
+    uint32_t magic=is.readIntLE();
+    cout << "magic " << Hex<>(magic) << endl;
+    if (magic==BB5_COMMON_HEADER_MAGIC) {
+        cout << indent << "This is a BB5 image" << endl;
+        BinaryReader rofs(is, 1024, BinaryReader::END);
+        extractROFS(rofs, outDir, indent);
+    }
+    else if (magic!=ROFS_MAGIC)
+        throw "wrong ROFS magic number";
+    
     uint8_t headerSize=is.readByte();
     uint8_t reversed=is.readByte();
     BinaryReader wis=is.window(headerSize-6);
@@ -128,4 +140,65 @@ void extractROFS(BinaryReader &is, const string &outDir, Indent indent) {
     
     FSDumpContext dc(outDir, dirTreeOffset-0x30);
     extractDir(is, dc, dirTreeOffset, dirTreeSize, indent);
+}
+
+void extractVolumes(BinaryReader &is, const string &outDir, Indent indent) {
+    unsigned i=0;
+    for (bool end=false; !end; i++) {
+        uint32_t offset=is.readIntLE();
+        uint32_t size=is.readIntLE();
+        uint32_t unknown1=is.readIntLE();
+        uint32_t unknown2=is.readIntLE();
+        uint32_t unknown3=is.readIntLE();
+        string name=trim(is.readString(12));
+        
+        if ((offset==0xFFFFFFFF)&&(size==0xFFFFFFFF))
+            end=true;
+        else {
+            cout << indent << "Volume " << i << "\n";
+            Indent shift(indent);
+            cout << shift << "Data: " << offset << ':' << size << endl;
+            if (unknown1)
+                cout << shift << "Unknown1: " << unknown1 << endl;
+            if (unknown2)
+                cout << shift << "Unknown2: " << unknown2 << endl;
+            if (unknown3)
+                cout << shift << "Unknown3: " << unknown3 << endl;
+            cout << shift << "Name: " << name << endl;
+            
+            // Extract the partition
+            if (offset!=0xFFFFFFFF) {
+                if (is.getSize()<offset+size) {
+                    cout << shift << "Truncating the partition" << endl;
+                    size=is.getSize()-offset;
+                }
+                BinaryReader pis(is, offset, size);
+                pis.extract(outDir+"/"+name+".img");
+                
+                if (name=="SOS-TOC") {
+                    BinaryReader nis(is, offset, BinaryReader::END);
+                    extractVolumes(nis, outDir, indent);
+                }
+            }
+        }
+    }
+}
+
+void extractSymbianImage(BinaryReader &is, const string &outDir, Indent indent) {
+    // Locate partition table
+    size_t partitionTableOffset=0;
+    BinaryReader isl(is);
+    bool empty=true;
+    while (empty) {
+        string entry=isl.readString(32);
+        for (auto i=entry.begin(); i!=entry.end(); ++i)
+            if (*i)
+                empty=false;
+        if (empty)
+            partitionTableOffset+=32;
+    }
+    
+    cout << "Partition table found at " << partitionTableOffset << endl;
+    BinaryReader contents(is, partitionTableOffset, BinaryReader::END);
+    extractVolumes(contents, outDir, indent);
 }
