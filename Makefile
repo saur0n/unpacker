@@ -4,12 +4,12 @@
 
 LIBRARIES=-lstdc++ -lunix++ -lcrypto -lz
 
-all: fpsxdump
+all: unpacker
 
-install: fpsxdump
-	cp fpsxdump /usr/local/bin
+install: unpacker
+	cp unpacker /usr/local/bin
 
-fpsxdump: *.cpp *.hpp
+unpacker: *.cpp *.hpp
 	g++ -o $@ *.cpp $(LIBRARIES)
 
 .PHONY: all install
