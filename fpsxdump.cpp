@@ -16,6 +16,7 @@ using std::endl;
 using std::string;
 
 extern void extractAndroidImage(BinaryReader &is, const string &filename);
+extern void extractChromiumPackage(BinaryReader &is, const string &outDir);
 extern void extractROM(BinaryReader &is);
 extern void extractFirmware(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractROFS(BinaryReader &is, const string &outDir, Indent indent=Indent());
@@ -43,7 +44,11 @@ int main(int argc, char** argv) {
         BinaryReader is(file);
         uint32_t magic=BinaryReader(is).readInt();
         
-        if (endsWith(filename, ".android")) {
+        if (endsWith(filename, ".5500")) {
+            // Nokia 5500 file system
+            extract5500FileSystem(is, output.empty()?"rofs":output);
+        }
+        else if (endsWith(filename, ".android")) {
             // Android sparse image
             extractAndroidImage(is, filename);
         }
@@ -51,21 +56,21 @@ int main(int argc, char** argv) {
             // Haier SPI Flash dump
             extractHaierFirmware(is);
         }
-        else if (endsWith(filename, ".rom")) {
-            // Akuvox firmware file
-            extractROM(is);
-        }
         else if (endsWith(filename, ".img")) {
             // Symbian flash image
             extractSymbianImage(is, output.empty()?"flash":output);
+        }
+        else if (endsWith(filename, ".pak")) {
+            // Chromium resource file
+            extractChromiumPackage(is, "chromium");
         }
         else if (endsWith(filename, ".rofs")) {
             // Symbian read-only file system
             extractROFS(is, output.empty()?"rofs":output);
         }
-        else if (endsWith(filename, ".5500")) {
-            // Nokia 5500 file system
-            extract5500FileSystem(is, output.empty()?"rofs":output);
+        else if (endsWith(filename, ".rom")) {
+            // Akuvox firmware file
+            extractROM(is);
         }
         else if (endsWith(filename, ".spi")) { //HACK
             extractSPI(is);
