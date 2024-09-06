@@ -131,6 +131,13 @@ void BinaryReader::skip(unsigned bytes) {
     offset+=bytes;
 }
 
+void BinaryReader::align(unsigned block) {
+    unsigned padding=(block-(offset%block))%block;
+    if (offset+padding>size)
+        throw "cannot align to block";
+    offset+=padding;
+}
+
 BinaryReader BinaryReader::window(size_t length) {
     if (offset>size)
         throw "cannot create a window, because the cursor is beyond the end";

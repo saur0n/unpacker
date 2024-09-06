@@ -34,6 +34,7 @@ public:
     size_t available() const;
     bool atEnd(size_t margin=0) const;
     void skip(unsigned bytes);
+    void align(unsigned block);
     BinaryReader window(size_t length);
     uint8_t readByte();
     uint16_t readShort();
