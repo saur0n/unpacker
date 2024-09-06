@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
             extractROM(is);
         }
         else if (endsWith(filename, ".spi")) { //HACK
+            // Symbian resource archive
             extractSPI(is);
         }
         else

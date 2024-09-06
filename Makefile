@@ -2,6 +2,8 @@
 #   FPSX/ROFS unpacking program
 ################################################################################
 
+CFLAGS=-Wall -Wno-unused
+CXXFLAGS=$(CFLAGS)
 LIBRARIES=-lstdc++ -lunix++ -lcrypto -lz
 
 all: unpacker
@@ -10,6 +12,9 @@ install: unpacker
 	cp unpacker /usr/local/bin
 
 unpacker: *.cpp *.hpp
-	g++ -o $@ *.cpp $(LIBRARIES)
+	g++ $(CXXFLAGS) -o $@ *.cpp $(LIBRARIES)
 
-.PHONY: all install
+clean:
+	rm -f unpacker
+
+.PHONY: all clean install
