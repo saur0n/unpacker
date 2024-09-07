@@ -1,7 +1,7 @@
 /*******************************************************************************
  *  Haier firmware unpacker
  *  
- *  © 2022, Sauron <fpsxdump@saur0n.science>
+ *  © 2022—2024, Sauron <fpsxdump@saur0n.science>
  ******************************************************************************/
 
 #include <iostream>
@@ -9,6 +9,7 @@
 
 using std::cout;
 using std::endl;
+using std::string;
 using std::vector;
 
 #define N         4096  /* size of ring buffer - must be power of 2 */
@@ -18,41 +19,34 @@ using std::vector;
 #define NIL       N     /* index for root of binary search trees */
 
 ByteArray decompressLZSS(const ByteArray &in) {
-    /* ring buffer of size N, with extra F-1 bytes to aid string comparison */
-    const uint8_t * src=&in[0];
-    uint8_t text_buf[N + F - 1];
-    const uint8_t * srcend = src + in.size();
-    int  i, j, k, r, c;
-    unsigned int flags;
     ByteArray result;
+    uint16_t flags=0;
+    size_t inPos=0;
     
-    for (i = 0; i < N - F; i++)
-        text_buf[i] = 0;
-    r = N - F;
-    flags = 0;
-    for ( ; ; ) {
-        if (((flags >>= 1) & 0x100) == 0) {
-            if (src < srcend) c = *src++; else break;
-            //cout << "h: " << hex << unsigned(c) << dec << endl;
-            flags = c | 0xFF00;  /* uses higher byte cleverly */
-        }   /* to count eight */
-        if (flags & 1) {
-            if (src < srcend) c = *src++; else break;
+    while (inPos<in.size()) {
+        flags>>=1;
+        
+        if (!(flags&0x100)) {
+            // get next flags
+            flags=0xFF00|in[inPos++];
+        }
+        
+        if (flags&1) {
+            // plain byte
+            uint8_t c=in[inPos++];
             result.push_back(c);
-            text_buf[r++] = c;
-            r &= (N - 1);
         }
         else {
-            if (src < srcend) j = *src++; else break;
-            if (src < srcend) i = *src++; else break;
-            //cout << "ref " << hex << i << " " << j << dec << "\n";
-            i |= ((j & 0x0F) << 8);
-            j  =  (j >> 4) + THRESHOLD;
-            for (k = 0; k <= j; k++) {
-                c = text_buf[(i + k) & (N - 1)];
-                result.push_back(c);
-                text_buf[r++] = c;
-                r &= (N - 1);
+            // dictionary bytes
+            uint8_t x=in[inPos++];
+            uint8_t count=(x>>4)+3;
+            uint16_t offset=((x&0x0F)<<8)|in[inPos++];
+            
+            while (count--) {
+                if (size_t(offset)>result.size())
+                    result.push_back(0);
+                else
+                    result.push_back(result[result.size()-offset]);
             }
         }
     }
@@ -60,10 +54,13 @@ ByteArray decompressLZSS(const ByteArray &in) {
     return result;
 }
 
-void extractHaierFirmware(BinaryReader &is) {
+void extractHaierFirmware(BinaryReader &is, const string &outDir) {
     vector<off_t> segments;
     
     try {
+        // Find starts of each segment by looking up for magic number. The
+        // method is probabilistic, but for known firmwares it gives correct
+        // results.
         BinaryReader temp(is);
         while (temp.available()) {
             off_t offset=temp.tell();
@@ -79,10 +76,13 @@ void extractHaierFirmware(BinaryReader &is) {
         uint32_t magic=window.readInt();
         uint32_t unknown=window.readInt();
         uint32_t length=window.readInt();
+        cout << "    Unknown: " << Hex(unknown) << endl;
+        cout << "    Length: " << length << endl;
         ByteArray compressedData=window.read(length);
         ByteArray data=decompressLZSS(compressedData);
         
-        upp::File out(("seg_"+std::to_string(i)+".seg").c_str(), O_WRONLY|O_CREAT|O_TRUNC);
+        string filename=outDir+'/'+"seg_"+std::to_string(i)+".seg";
+        upp::File out(filename.c_str(), O_WRONLY|O_CREAT|O_TRUNC);
         out.write(data.data(), data.size());
     }
 }

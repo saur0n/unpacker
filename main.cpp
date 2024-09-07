@@ -22,7 +22,7 @@ extern void extractFirmware(BinaryReader &is, const string &outDir, Indent inden
 extern void extractROFS(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractSymbianImage(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractSPI(BinaryReader &is);
-extern void extractHaierFirmware(BinaryReader &is);
+extern void extractHaierFirmware(BinaryReader &is, const string &outDir);
 extern void extract5500FileSystem(BinaryReader &is, const string &outDir, Indent indent=Indent());
 
 int main(int argc, char** argv) {
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
         }
         else if (endsWith(filename, ".bin")) {
             // Haier SPI Flash dump
-            extractHaierFirmware(is);
+            extractHaierFirmware(is, output.empty()?".":output);
         }
         else if (endsWith(filename, ".img")) {
             // Symbian flash image
