@@ -97,9 +97,4 @@ std::ostream &operator <<(std::ostream &stream, Hex<T> value) {
     return stream << std::hex << '0' << 'x' << value.value << std::dec;
 }
 
-/** Convert binary string to a hexadecimal string **/
-std::string toHexString(const std::string &in);
-/** Remove whitespace characters from the end of the string **/
-std::string trim(const std::string &in);
-
 #endif

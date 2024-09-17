@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unix++/FileSystem.hpp>
 #include "REUtils.hpp"
+#include "StringUtils.hpp"
 
 using std::cout;
 using std::endl;

@@ -237,24 +237,3 @@ void BinaryReader::read(void * buffer, size_t length) {
             throw EOFException();
     }
 }
-
-/******************************************************************************/
-
-string toHexString(const string &in) {
-    static const char HEXCHARS[]="0123456789ABCDEF";
-    string result(in.length()*2, '\0');
-    for (size_t i=0; i<in.size(); i++) {
-        unsigned char c=in[i];
-        result[i*2+0]=HEXCHARS[c>>4];
-        result[i*2+1]=HEXCHARS[c&15];
-    }
-    return result;
-}
-
-string trim(const string &str) {
-    size_t length=str.length();
-    while ((length>0)&&(str[length-1]=='\0'))
-        length--;
-    return str.substr(0, length);
-}
-
