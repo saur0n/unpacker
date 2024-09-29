@@ -1,13 +1,14 @@
 /*******************************************************************************
  *  FPSX/ROFS/Akuvox unpacking program
  *  
- *  © 2020—2023, Sauron
+ *  © 2020—2024, Sauron
  ******************************************************************************/
 
 #include <cstring>
 #include <iostream>
 #include "REUtils.hpp"
 #include "StringUtils.hpp"
+#include "TypeRegistration.hpp"
 
 using namespace upp;
 using std::cerr;
@@ -17,7 +18,6 @@ using std::string;
 
 extern void extractAndroidImage(BinaryReader &is, const string &filename);
 extern void extractChromiumPackage(BinaryReader &is, const string &outDir);
-extern void extractROM(BinaryReader &is);
 extern void extractFirmware(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractROFS(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractSymbianImage(BinaryReader &is, const string &outDir, Indent indent=Indent());
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
         string output;
 
-        for (uint32_t i = 1; i < argc - 1; i++) {
+        for (int i=1; i<argc-1; i++) {
             if (strncmp(argv[i], "-o", 2) == 0) {
                 i++;
                 output = argv[i];
@@ -42,7 +42,6 @@ int main(int argc, char** argv) {
         const char * filename = argv[argc-1];
         File file(filename);
         BinaryReader is(file);
-        uint32_t magic=BinaryReader(is).readInt();
         
         if (endsWith(filename, ".5500")) {
             // Nokia 5500 file system
@@ -60,24 +59,21 @@ int main(int argc, char** argv) {
             // Symbian flash image
             extractSymbianImage(is, output.empty()?"flash":output);
         }
-        else if (endsWith(filename, ".pak")) {
-            // Chromium resource file
-            extractChromiumPackage(is, "chromium");
-        }
         else if (endsWith(filename, ".rofs")) {
             // Symbian read-only file system
             extractROFS(is, output.empty()?"rofs":output);
-        }
-        else if (endsWith(filename, ".rom")) {
-            // Akuvox firmware file
-            extractROM(is);
         }
         else if (endsWith(filename, ".spi")) { //HACK
             // Symbian resource archive
             extractSPI(is);
         }
-        else
-            extractFirmware(is, output.empty()?"flash":output);
+        else {
+            auto extract=TypeRegistration::resolve(is, filename);
+            if (extract)
+                extract(is, output);
+            else
+                cerr << filename << ": cannot determine file type" << endl;
+        }
         
         return 0;
     }

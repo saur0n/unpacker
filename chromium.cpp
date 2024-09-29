@@ -1,13 +1,15 @@
 /*******************************************************************************
  *  Chromium resource package unpacker
  *  
- *  © 2023, Sauron <unpacker@saur0n.science>
+ *  © 2023—2024, Sauron <unpacker@saur0n.science>
  ******************************************************************************/
 
 #include <iostream>
 #include <sys/stat.h>
 #include <vector>
 #include "REUtils.hpp"
+#include "StringUtils.hpp"
+#include "TypeRegistration.hpp"
 
 using std::cout;
 using std::endl;
@@ -27,7 +29,11 @@ static void extract(const string &filename, const ByteArray &ba) {
     file.write(ba.data(),ba.size());
 }
 
-void extractChromiumPackage(BinaryReader &is, const string &outDir) {
+static bool detect(BinaryReader &is, const string &filename) {
+    return endsWith(filename, ".pak");
+}
+
+static void extract(BinaryReader &is, const string &outDir) {
     uint32_t version=is.readIntLE();
     uint8_t encoding=0;
     uint16_t nResources=0, nAliases=0;
@@ -87,3 +93,5 @@ void extractChromiumPackage(BinaryReader &is, const string &outDir) {
     // Create symbolic links for aliases
     // TODO
 }
+
+static const TypeRegistration TR("chromium", detect, extract);

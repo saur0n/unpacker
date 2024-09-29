@@ -1,7 +1,7 @@
 /*******************************************************************************
  *  Akuvox Intercom firmware unpacker
  *  
- *  © 2021, Sauron <fpsxdump@saur0n.science>
+ *  © 2021—2024, Sauron <fpsxdump@saur0n.science>
  ******************************************************************************/
 
 #include <cstring>
@@ -11,6 +11,7 @@
 #include <unix++/FileSystem.hpp>
 #include "REUtils.hpp"
 #include "StringUtils.hpp"
+#include "TypeRegistration.hpp"
 
 using std::cout;
 using std::endl;
@@ -114,9 +115,11 @@ static void uncompressTo(const string &in, upp::File &output) {
     output.write(outData.data(), outData.size());
 }
 
-void extractROM(BinaryReader &is) {
-    const std::string dir="akuvox";
-    
+static bool detect(BinaryReader &is, const string &filename) {
+    return is.readString(4)=="MORR";
+}
+
+static void extract(BinaryReader &is, const string &dir) {
     // Read main header
     string magic=is.readString(4);
     if (magic!="MORR")
@@ -231,3 +234,6 @@ void extractROM(BinaryReader &is) {
         }
     }
 }
+
+static const TypeRegistration TR("akuvox", detect, extract);
+

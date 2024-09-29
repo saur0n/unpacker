@@ -19,7 +19,8 @@ OBJECTS=\
 	build/REUtils.o \
 	build/rofs.o \
 	build/spi.o \
-	build/StringUtils.o
+	build/StringUtils.o \
+	build/TypeRegistration.o
 
 unpacker: $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(LIBRARIES)
