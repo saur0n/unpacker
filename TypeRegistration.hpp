@@ -29,4 +29,7 @@ private:
     ExtractFunction extract;
 };
 
+#define TR(name) \
+    static const TypeRegistration _##name##_tr(#name, detect, extract)
+
 #endif

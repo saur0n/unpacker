@@ -43,11 +43,7 @@ int main(int argc, char** argv) {
         File file(filename);
         BinaryReader is(file);
         
-        if (endsWith(filename, ".5500")) {
-            // Nokia 5500 file system
-            extract5500FileSystem(is, output.empty()?"rofs":output);
-        }
-        else if (endsWith(filename, ".android")) {
+        if (endsWith(filename, ".android")) {
             // Android sparse image
             extractAndroidImage(is, filename);
         }
