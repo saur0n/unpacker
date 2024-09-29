@@ -94,4 +94,4 @@ static void extract(BinaryReader &is, const string &outDir) {
     // TODO
 }
 
-static const TypeRegistration TR("chromium", detect, extract);
+TR(chromium);

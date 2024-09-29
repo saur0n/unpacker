@@ -235,5 +235,4 @@ static void extract(BinaryReader &is, const string &dir) {
     }
 }
 
-static const TypeRegistration TR("akuvox", detect, extract);
-
+TR(akuvox);
