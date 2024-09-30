@@ -3,6 +3,7 @@
 #include <unix++/FileSystem.hpp>
 #include "REUtils.hpp"
 #include "StringUtils.hpp"
+#include "TypeRegistration.hpp"
 
 using std::cout;
 using std::endl;
@@ -203,3 +204,19 @@ void extractSymbianImage(BinaryReader &is, const string &outDir, Indent indent) 
     BinaryReader contents(is, partitionTableOffset, BinaryReader::END);
     extractVolumes(contents, outDir, indent);
 }
+
+static bool detect(BinaryReader &is, const string &filename) {
+    if (endsWith(filename, ".rofs"))
+        return true;
+    else if (is.readIntLE()==BB5_COMMON_HEADER_MAGIC)
+        return true;
+    else
+        return false;
+}
+
+static void extract(BinaryReader &is, const string &outDir) {
+    return extractROFS(is, outDir, Indent());
+}
+
+TR(rofs);
+
