@@ -17,8 +17,12 @@ public:
     ~TypeRegistration();
     /** List the file types **/
     static std::vector<const char *> list();
+    /** Get the extracter by its name **/
+    static ExtractFunction get(const std::string &name);
     /** Detect the type of file **/
     static ExtractFunction resolve(BinaryReader &is, const std::string &filename);
+    /** Always returns false **/
+    static bool no(BinaryReader &is, const std::string &filename) { return false; }
     
 private:
     explicit TypeRegistration(const TypeRegistration &other)=delete;

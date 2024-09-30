@@ -32,6 +32,16 @@ vector<const char *> TypeRegistration::list() {
     return result;
 }
 
+TypeRegistration::ExtractFunction TypeRegistration::get(const string &name) {
+    auto &registrations=getRegistrations();
+    
+    for (auto i=registrations.begin(); i!=registrations.end(); ++i)
+        if (name==(*i)->name)
+            return (*i)->extract;
+    
+    return nullptr;
+}
+
 TypeRegistration::ExtractFunction TypeRegistration::resolve(BinaryReader &is, const string &filename) {
     auto &registrations=getRegistrations();
     
