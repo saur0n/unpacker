@@ -33,7 +33,9 @@ This command will extract one of Opera resource files to directory named `opera`
 
 ## Unpacking Android sparse images
 This command will extract Android sparse image to the current directory:
-
+```
+./unpacker android_image.android
+```
 
 If there is an error, try [another tool](https://github.com/anestisb/android-simg2img).
 
