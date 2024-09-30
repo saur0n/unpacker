@@ -2,6 +2,7 @@
 #include <unix++/FileSystem.hpp>
 #include "REUtils.hpp"
 #include "StringUtils.hpp"
+#include "TypeRegistration.hpp"
 
 using std::cout;
 using std::endl;
@@ -57,7 +58,7 @@ static const Property PROPERTIES[]={
     {250, "UNKFA_IMPL",                 false,  0}
 };
 
-void extractFirmware(BinaryReader &is, const std::string &path, Indent indent=Indent());
+static void extractFirmware(BinaryReader &is, const string &path, Indent indent);
 
 static const Property &getProperty(uint8_t key) {
     static const Property DEFAULT={0, nullptr, false, 0};
@@ -232,7 +233,11 @@ static void dumpBlock(BinaryReader &is, const string &path, Indent indent) {
         cout << indent << "Block header was not fully read" << endl;
 }
 
-void extractFirmware(BinaryReader &is, const string &path, Indent indent) {
+static bool detect(BinaryReader &is, const string &filename) {
+    return endsWith(filename, ".fpsx");
+}
+
+static void extractFirmware(BinaryReader &is, const string &path, Indent indent) {
     uint8_t signature=is.readByte();
     uint32_t headerSize=is.readInt();
     
@@ -253,3 +258,10 @@ void extractFirmware(BinaryReader &is, const string &path, Indent indent) {
         dumpBlock(is, path, indent);
     }
 }
+
+static void extract(BinaryReader &is, const string &path) {
+    return extractFirmware(is, path, Indent());
+}
+
+TR(fpsx);
+
