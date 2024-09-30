@@ -21,7 +21,6 @@ extern void extractChromiumPackage(BinaryReader &is, const string &outDir);
 extern void extractFirmware(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractROFS(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractSymbianImage(BinaryReader &is, const string &outDir, Indent indent=Indent());
-extern void extractSPI(BinaryReader &is);
 extern void extractHaierFirmware(BinaryReader &is, const string &outDir);
 extern void extract5500FileSystem(BinaryReader &is, const string &outDir, Indent indent=Indent());
 
@@ -58,10 +57,6 @@ int main(int argc, char** argv) {
         else if (endsWith(filename, ".rofs")) {
             // Symbian read-only file system
             extractROFS(is, output.empty()?"rofs":output);
-        }
-        else if (endsWith(filename, ".spi")) { //HACK
-            // Symbian resource archive
-            extractSPI(is);
         }
         else {
             auto extract=TypeRegistration::resolve(is, filename);
