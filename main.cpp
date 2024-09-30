@@ -21,7 +21,6 @@ extern void extractAndroidImage(BinaryReader &is, const string &filename);
 extern void extractChromiumPackage(BinaryReader &is, const string &outDir);
 extern void extractFirmware(BinaryReader &is, const string &outDir, Indent indent=Indent());
 extern void extractSymbianImage(BinaryReader &is, const string &outDir, Indent indent=Indent());
-extern void extractHaierFirmware(BinaryReader &is, const string &outDir);
 extern void extract5500FileSystem(BinaryReader &is, const string &outDir, Indent indent=Indent());
 
 int main(int argc, char** argv) {

@@ -6,13 +6,14 @@
 
 #include <iostream>
 #include "REUtils.hpp"
+#include "TypeRegistration.hpp"
 
 using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
 
-ByteArray decompressLZSS(const ByteArray &in) {
+static ByteArray decompressLZSS(const ByteArray &in) {
     ByteArray result;
     uint16_t flags=0;
     size_t inPos=0;
@@ -48,7 +49,7 @@ ByteArray decompressLZSS(const ByteArray &in) {
     return result;
 }
 
-void extractHaierFirmware(BinaryReader &is, const string &outDir) {
+static void extract(BinaryReader &is, const string &outDir) {
     vector<off_t> segments;
     
     try {
@@ -80,3 +81,5 @@ void extractHaierFirmware(BinaryReader &is, const string &outDir) {
         out.write(data.data(), data.size());
     }
 }
+
+TR_NODETECT(haier);

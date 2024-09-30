@@ -35,5 +35,7 @@ private:
 
 #define TR(name) \
     static const TypeRegistration _##name##_tr(#name, detect, extract)
+#define TR_NODETECT(name) \
+    static const TypeRegistration _##name##_tr(#name, &TypeRegistration::no, extract)
 
 #endif
