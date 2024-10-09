@@ -145,7 +145,10 @@ static void extract(BinaryReader &is, const string &outDir) {
         if (length!=string::npos) {
             cout << "[JPEG] found at " << offset << endl;
             
-            string filename=outDir+'/'+std::to_string(offset)+".jpeg";
+            char buffer[32];
+            snprintf(buffer, sizeof(buffer), "0x%06zX", offset);
+            
+            string filename=outDir+'/'+buffer+".jpeg";
             File outFile(filename.c_str(), O_WRONLY|O_TRUNC|O_CREAT);
             outFile.write(&data[offset], length);
         }
