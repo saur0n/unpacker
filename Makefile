@@ -21,6 +21,7 @@ OBJECTS=\
 	build/rofs.o \
 	build/spi.o \
 	build/StringUtils.o \
+	build/qt.o \
 	build/TypeRegistration.o
 
 unpacker: $(OBJECTS)

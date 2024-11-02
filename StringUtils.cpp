@@ -1,6 +1,7 @@
 #include "StringUtils.hpp"
 
 using std::string;
+using std::wstring;
 
 /******************************************************************************/
 
@@ -33,4 +34,29 @@ string trim(const string &str) {
     while ((length>0)&&(str[length-1]=='\0'))
         length--;
     return str.substr(0, length);
+}
+
+string convert(const wstring &in) {
+    string result;
+    for (size_t i=0; i<in.size(); i++) {
+        wchar_t c=in[i];
+        if (c<0x80)
+            result.push_back(c);
+        else if (c<0x800) {
+            result.push_back(0xC0|(c>>6));
+            result.push_back(0x80|(c&63));
+        }
+        else if (c<0x8000) {
+            result.push_back(0xE0|(c>>12));
+            result.push_back(0x80|((c>>6)&63));
+            result.push_back(0x80|(c&63));
+        }
+        else {
+            result.push_back(0xF0|(c>>18));
+            result.push_back(0x80|((c>>12)&63));
+            result.push_back(0x80|((c>>6)&63));
+            result.push_back(0x80|(c&63));
+        }
+    }
+    return result;
 }

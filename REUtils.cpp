@@ -8,6 +8,7 @@
 
 using std::string;
 using std::vector;
+using std::wstring;
 
 /******************************************************************************/
 
@@ -67,8 +68,11 @@ int ZEXPORT uncompress_(Bytef *dest, uLongf *destLen, const Bytef *source, uLong
            err;
 }
 
-ByteArray uncompress(const ByteArray &inData) {
-    uLongf outLength=inData.size()*2;
+ByteArray uncompress(const ByteArray &inData, size_t uncompressedLengthHint) {
+    if (0==uncompressedLengthHint)
+        uncompressedLengthHint=inData.size()*2;
+    
+    uLongf outLength=uncompressedLengthHint;
     ByteArray outData;
     for (bool unpacked=false; !unpacked;) {
         outData.resize(outLength);
@@ -198,6 +202,13 @@ string BinaryReader::readUnicodeString(size_t length) {
         result[i]=readByte();
         readByte();
     }
+    return result;
+}
+
+wstring BinaryReader::readWideString(size_t length) {
+    wstring result(length, '\0');
+    for (unsigned i=0; i<length; i++)
+        result[i]=readShort();
     return result;
 }
 

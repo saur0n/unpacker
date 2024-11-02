@@ -14,7 +14,7 @@
 using ByteArray=std::vector<uint8_t>;
 
 /** Uncompress zlib-compressed data blob **/
-ByteArray uncompress(const ByteArray &in);
+ByteArray uncompress(const ByteArray &in, size_t uncompressedLengthHint=0);
 
 /** Indicates that an attempt to read beyound of file or a block occurred **/
 class EOFException {};
@@ -47,6 +47,7 @@ public:
     std::string readString(size_t length);
     std::string readShortUnicodeString();
     std::string readUnicodeString(size_t length);
+    std::wstring readWideString(size_t length);
     void extract(const std::string &destination, off_t offset, size_t length, bool truncate=false);
     void extract(const std::string &destination, bool truncate=false);
     ByteArray read(size_t maxLength);

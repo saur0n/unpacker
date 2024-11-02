@@ -9,5 +9,7 @@ std::string replaceExtension(const std::string &filename, const std::string &ext
 std::string toHexString(const std::string &in);
 /** Remove whitespace characters from the end of the string **/
 std::string trim(const std::string &in);
+/** Convert a string from UTF-16 to UTF-8 **/
+std::string convert(const std::wstring &in);
 
 #endif

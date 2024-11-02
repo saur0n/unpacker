@@ -48,3 +48,11 @@ This command will print information about SPI file:
 ```
 
 Note that this command will not create any files.
+
+## Unpacking Qt resource files
+Qt resource files usually have extension `.rcc`. Note that the unpacker at the moment does not extract resources built into executable files.
+
+This command will extract resources from file `installer.rcc` to directory `installer`:
+```
+./unpacker -o installer installer.rcc`
+```
