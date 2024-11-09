@@ -97,7 +97,7 @@ static void extract(BinaryReader &is, const string &outDir) {
     uint32_t nOff=header.readInt();
     BinaryReader names(is, nOff, BinaryReader::END);
     
-    extract(outDir.empty()?".":outDir, string(), tree, data, names);
+    extract(outDir, string(), tree, data, names);
     cout << "DONE\n";
 }
 
