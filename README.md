@@ -3,6 +3,7 @@ This tool can unpack:
 - Nokia flash images
 - Chromium resource packages
 - Android sparse boot images
+- Electron archives
 - some other file types (support is experimental)
 
 ## Dependencies

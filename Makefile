@@ -16,6 +16,7 @@ OBJECTS=\
 	build/fpsx.o \
 	build/haier.o \
 	build/images.o \
+	build/lcf.o \
 	build/main.o \
 	build/REUtils.o \
 	build/rofs.o \

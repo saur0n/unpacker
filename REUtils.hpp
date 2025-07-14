@@ -45,8 +45,9 @@ public:
     uint64_t readLongLE();
     std::string readShortString();
     std::string readString(size_t length);
-    std::string readShortUnicodeString();
+    std::string readShortUnicodeStringLE();
     std::string readUnicodeString(size_t length);
+    std::string readUnicodeStringLE(size_t length);
     std::wstring readWideString(size_t length);
     void extract(const std::string &destination, off_t offset, size_t length, bool truncate=false);
     void extract(const std::string &destination, bool truncate=false);

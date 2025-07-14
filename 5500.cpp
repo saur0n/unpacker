@@ -17,7 +17,7 @@ static void extract(BinaryReader &is, const string &outDir) {
     
     for (unsigned i=0; i<10; i++) {
         is.skip(9);
-        cout << indent << is.readShortUnicodeString() << endl;
+        cout << indent << is.readShortUnicodeStringLE() << endl;
     }
 }
 

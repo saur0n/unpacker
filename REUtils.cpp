@@ -192,16 +192,39 @@ string BinaryReader::readString(size_t length) {
     return result;
 }
 
-string BinaryReader::readShortUnicodeString() {
-    return readUnicodeString(readByte());
+string BinaryReader::readShortUnicodeStringLE() {
+    return readUnicodeStringLE(readByte());
+}
+
+static void convert(string &string, wchar_t wc) {
+    if (wc <= 0x7F) {
+        string.push_back(static_cast<uint8_t>(wc));
+    }
+    else if (wc <= 0x7FF) {
+        string.push_back(0xC0 | ((wc >> 6) & 0x1F));
+        string.push_back(0x80 | (wc & 0x3F));
+    }
+    /*else if (wc >= 0xD800 && wc <= 0xDFFF) {
+        throw std::runtime_error("Surrogate half encountered; need full pair to convert.");
+    }*/
+    else {
+        string.push_back(0xE0 | ((wc >> 12) & 0x0F));
+        string.push_back(0x80 | ((wc >> 6) & 0x3F));
+        string.push_back(0x80 | (wc & 0x3F));
+    }
 }
 
 string BinaryReader::readUnicodeString(size_t length) {
-    string result(length, '\0');
-    for (unsigned i=0; i<length; i++) {
-        result[i]=readByte();
-        readByte();
-    }
+    string result;
+    for (unsigned i=0; i<length; i++)
+        convert(result, readShort());
+    return result;
+}
+
+string BinaryReader::readUnicodeStringLE(size_t length) {
+    string result;
+    for (unsigned i=0; i<length; i++)
+        convert(result, readShortLE());
     return result;
 }
 

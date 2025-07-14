@@ -34,7 +34,7 @@ public:
         size=eis.readIntLE();
         address=eis.readIntLE();
         extendedAttributes=eis.readByte();
-        name=eis.readShortUnicodeString();
+        name=eis.readShortUnicodeStringLE();
     }
     void print(const char * type, Indent indent) {
         cout << indent << type << ": " << name << endl;
